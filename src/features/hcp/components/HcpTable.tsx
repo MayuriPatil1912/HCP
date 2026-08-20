@@ -23,6 +23,8 @@ export function HcpTable() {
    * expanded territories
    */
   const displayRows = useSelector(selectDisplayRows);
+  // console.log(selectDisplayRows,"selectDisplayRows")
+  console.log(displayRows,"displayRows")
 
   const grouping = useSelector(selectGrouping);
 
@@ -63,7 +65,7 @@ export function HcpTable() {
           }}
         >
           {virtualRows.map((virtualRow) => {
-            console.log(displayRows, "displayRows");
+            // console.log(displayRows, "displayRows");
             const displayRow = displayRows[virtualRow.index];
 
             if (!displayRow) {

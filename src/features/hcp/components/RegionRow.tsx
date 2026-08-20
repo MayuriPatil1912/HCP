@@ -22,7 +22,7 @@ export function RegionRow({ row, expanded }: RegionRowProps) {
     <div className="table-row region-row">
       {/* Region label
           Spans ID + HCP Name + Specialty */}
-      <div className="table-cell region-cell region-label">
+      <div className="region-cell region-label">
         <button
           type="button"
           className="expand-button"
