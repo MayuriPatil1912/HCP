@@ -1,374 +1,212 @@
-import {
-  createSlice,
-  PayloadAction,
-} from "@reduxjs/toolkit";
-
 import type { HcpRecord } from "../../data-generator";
 
-import { initialHcpState } from "./hcpInitialState";
-
 import type {
-  EditState,
-  HistoryCommand,
+  Aggregate,
+  DisplayRow,
+  GroupingState,
   RowKey,
-  SortColumn,
-  HcpState,
 } from "./hcpTypes";
 
-const hcpSlice = createSlice({
-  name: "hcp",
+/**
+ * Calls can be either number or string in the
+ * provided data generator.
+ *
+ * We normalize it only when performing calculations.
+ */
+export function getCallsValue(
+  calls: number | string
+): number {
+  const value = Number(calls);
 
-  initialState: initialHcpState,
+  return Number.isFinite(value) ? value : 0;
+}
 
-  reducers: {
-    // -------------------------
-    // DATA
-    // -------------------------
+/**
+ * Calculate CPI safely.
+ *
+ * CPI = Calls / TRx * 100
+ *
+ * If TRx is 0, CPI is undefined and we return null.
+ */
+export function calculateCpi(
+  calls: number,
+  trx: number
+): number | null {
+  if (trx === 0) {
+    return null;
+  }
 
-    setRows(
-      state,
-      action: PayloadAction<HcpRecord[]>
+  return (calls / trx) * 100;
+}
+
+/**
+ * Calculate aggregate values for a group.
+ */
+export function calculateAggregate(
+  rows: HcpRecord[]
+): Aggregate {
+  let calls = 0;
+  let trx = 0;
+  let nrx = 0;
+
+  for (const row of rows) {
+    calls += getCallsValue(row.calls);
+    trx += row.trx;
+    nrx += row.nrx;
+  }
+
+  return {
+    hcpCount: rows.length,
+    calls,
+    trx,
+    nrx,
+    cpi: calculateCpi(calls, trx),
+  };
+}
+
+/**
+ * Build the flattened list consumed by the virtualizer.
+ *
+ * Hierarchy:
+ *
+ * Region
+ *   └── Territory
+ *         └── HCP
+ *
+ * Only children of expanded groups are added.
+ */
+export function buildDisplayRows(
+  rows: HcpRecord[],
+  grouping: GroupingState
+): DisplayRow[] {
+  const displayRows: DisplayRow[] = [];
+
+  /**
+   * First group rows by Region.
+   */
+  const regions = new Map<string, HcpRecord[]>();
+
+  rows.forEach((row) => {
+    const existing =
+      regions.get(row.region);
+
+    if (existing) {
+      existing.push(row);
+    } else {
+      regions.set(row.region, [row]);
+    }
+  });
+
+  /**
+   * Build Region → Territory → HCP hierarchy.
+   */
+  for (const [
+    region,
+    regionRows,
+  ] of regions) {
+    /**
+     * Region row
+     */
+    displayRows.push({
+      type: "region",
+
+      key: `region:${region}`,
+
+      region,
+
+      aggregate:
+        calculateAggregate(regionRows),
+    });
+
+    /**
+     * If Region is collapsed,
+     * don't add its territories/HCPs.
+     */
+    if (
+      !grouping.expandedRegions.includes(
+        region
+      )
     ) {
-      state.rows = action.payload;
-    },
+      continue;
+    }
 
-    updateCalls(
-      state,
-      action: PayloadAction<{
-        rowKey: RowKey;
-        value: number;
-      }>
-    ) {
-      const {
-        rowKey,
-        value,
-      } = action.payload;
+    /**
+     * Group Region rows by Territory.
+     */
+    const territories = new Map<
+      string,
+      HcpRecord[]
+    >();
 
-      const row = state.rows[rowKey];
+    regionRows.forEach((row) => {
+      const existing =
+        territories.get(row.territory);
 
-      if (!row) {
-        return;
-      }
-
-      row.calls = value;
-    },
-
-    // -------------------------
-    // SEARCH / FILTER
-    // -------------------------
-
-    setSearch(
-      state,
-      action: PayloadAction<string>
-    ) {
-      state.filters.search =
-        action.payload;
-    },
-
-    setRegionFilter(
-      state,
-      action: PayloadAction<string>
-    ) {
-      state.filters.region =
-        action.payload;
-    },
-
-    // -------------------------
-    // SORTING
-    // -------------------------
-
-    setSort(
-      state,
-      action: PayloadAction<SortColumn>
-    ) {
-      const column =
-        action.payload;
-
-      // New column
-      if (
-        state.sorting.column !==
-        column
-      ) {
-        state.sorting.column =
-          column;
-
-        state.sorting.direction =
-          "asc";
-
-        return;
-      }
-
-      // ASC → DESC
-      if (
-        state.sorting.direction ===
-        "asc"
-      ) {
-        state.sorting.direction =
-          "desc";
-
-        return;
-      }
-
-      // DESC → NONE
-      if (
-        state.sorting.direction ===
-        "desc"
-      ) {
-        state.sorting.column =
-          null;
-
-        state.sorting.direction =
-          "none";
-
-        return;
-      }
-
-      // NONE → ASC
-      state.sorting.direction =
-        "asc";
-    },
-
-    // -------------------------
-    // GROUPING
-    // -------------------------
-
-    toggleRegion(
-      state,
-      action: PayloadAction<string>
-    ) {
-      const region =
-        action.payload;
-
-      const index =
-        state.grouping.expandedRegions.indexOf(
-          region
-        );
-
-      if (index >= 0) {
-        state.grouping.expandedRegions.splice(
-          index,
-          1
-        );
+      if (existing) {
+        existing.push(row);
       } else {
-        state.grouping.expandedRegions.push(
-          region
-        );
+        territories.set(row.territory, [row]);
       }
-    },
+    });
 
-    toggleTerritory(
-      state,
-      action: PayloadAction<string>
-    ) {
-      const territory =
-        action.payload;
+    /**
+     * Add Territory rows.
+     */
+    for (const [
+      territory,
+      territoryRows,
+    ] of territories) {
+      const territoryKey =
+        `${region}:${territory}`;
 
-      const index =
-        state.grouping.expandedTerritories.indexOf(
-          territory
-        );
+      displayRows.push({
+        type: "territory",
 
-      if (index >= 0) {
-        state.grouping.expandedTerritories.splice(
-          index,
-          1
-        );
-      } else {
-        state.grouping.expandedTerritories.push(
-          territory
-        );
-      }
-    },
+        key: `territory:${territoryKey}`,
 
-    // -------------------------
-    // EDITING
-    // -------------------------
+        region,
 
-    startEdit(
-      state,
-      action: PayloadAction<EditState>
-    ) {
-      const edit =
-        action.payload;
+        territory,
 
-      const key =
-        String(edit.rowKey);
+        aggregate:
+          calculateAggregate(
+            territoryRows
+          ),
+      });
 
-      state.edits[key] =
-        edit;
-    },
-
-    setEditPending(
-      state,
-      action: PayloadAction<{
-        rowKey: RowKey;
-        requestId: string;
-      }>
-    ) {
-      const {
-        rowKey,
-        requestId,
-      } = action.payload;
-
-      const key =
-        String(rowKey);
-
-      const edit =
-        state.edits[key];
-
+      /**
+       * If Territory is collapsed,
+       * don't add its HCP rows.
+       */
       if (
-        !edit ||
-        edit.requestId !==
-          requestId
+        !grouping.expandedTerritories.includes(
+          territoryKey
+        )
       ) {
-        return;
+        continue;
       }
 
-      edit.status =
-        "pending";
-    },
+      /**
+       * Add individual HCP rows.
+       *
+       * IMPORTANT:
+       * We need the original row index as
+       * the stable RowKey.
+       */
+      for (const row of territoryRows) {
+        const rowKey =
+          rows.indexOf(row) as RowKey;
 
-    editRejected(
-      state,
-      action: PayloadAction<{
-        rowKey: RowKey;
-        requestId: string;
-        error: string;
-      }>
-    ) {
-      const {
-        rowKey,
-        requestId,
-        error,
-      } = action.payload;
+        displayRows.push({
+          type: "hcp",
 
-      const key =
-        String(rowKey);
+          key: rowKey,
 
-      const edit =
-        state.edits[key];
-
-      if (
-        !edit ||
-        edit.requestId !==
-          requestId
-      ) {
-        return;
+          row,
+        });
       }
+    }
+  }
 
-      edit.status =
-        "rejected";
-
-      edit.error =
-        error;
-    },
-
-    clearEdit(
-      state,
-      action: PayloadAction<RowKey>
-    ) {
-      delete state.edits[
-        String(action.payload)
-      ];
-    },
-
-    // -------------------------
-    // SELECTION
-    // -------------------------
-
-    toggleRowSelection(
-      state,
-      action: PayloadAction<RowKey>
-    ) {
-      const rowKey =
-        action.payload;
-
-      const index =
-        state.selectedRows.indexOf(
-          rowKey
-        );
-
-      if (index >= 0) {
-        state.selectedRows.splice(
-          index,
-          1
-        );
-      } else {
-        state.selectedRows.push(
-          rowKey
-        );
-      }
-    },
-
-    selectRows(
-      state,
-      action: PayloadAction<RowKey[]>
-    ) {
-      for (
-        const rowKey of action.payload
-      ) {
-        if (
-          !state.selectedRows.includes(
-            rowKey
-          )
-        ) {
-          state.selectedRows.push(
-            rowKey
-          );
-        }
-      }
-    },
-
-    clearSelection(state) {
-      state.selectedRows = [];
-    },
-
-    // -------------------------
-    // HISTORY
-    // -------------------------
-
-    pushHistory(
-      state,
-      action: PayloadAction<HistoryCommand>
-    ) {
-      state.history.undoStack.push(
-        action.payload
-      );
-
-      // New command invalidates redo
-      state.history.redoStack = [];
-    },
-
-    clearHistory(state) {
-      state.history.undoStack = [];
-      state.history.redoStack = [];
-    },
-  },
-});
-
-export const {
-  setRows,
-  updateCalls,
-
-  setSearch,
-  setRegionFilter,
-
-  setSort,
-
-  toggleRegion,
-  toggleTerritory,
-
-  startEdit,
-  setEditPending,
-  editRejected,
-  clearEdit,
-
-  toggleRowSelection,
-  selectRows,
-  clearSelection,
-
-  pushHistory,
-  clearHistory,
-} = hcpSlice.actions;
-
-export default hcpSlice.reducer;
+  return displayRows;
+}

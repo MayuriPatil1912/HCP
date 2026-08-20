@@ -1,24 +1,92 @@
 import type { HcpRecord } from "../../data-generator";
 
+/**
+ * Stable identity of a source HCP row.
+ */
 export type RowKey = number;
 
-export type SortDirection = "asc" | "desc" | "none";
-
+/**
+ * Sorting
+ */
 export type SortColumn =
   | "id"
   | "name"
   | "specialty"
-  | "region"
-  | "territory"
   | "calls"
   | "trx"
   | "nrx"
   | "cpi";
 
-export interface SortState {
-  column: SortColumn | null;
-  direction: SortDirection;
+export type SortDirection =
+  | "asc"
+  | "desc"
+  | "none";
+
+/**
+ * Filters
+ */
+export interface FilterState {
+  search: string;
+  region: string;
 }
+
+/**
+ * Grouping
+ */
+export interface GroupingState {
+  expandedRegions: string[];
+  expandedTerritories: string[];
+}
+
+/**
+ * Aggregated values displayed by
+ * Region and Territory rows.
+ */
+export interface Aggregate {
+  hcpCount: number;
+  calls: number;
+  trx: number;
+  nrx: number;
+  cpi: number | null;
+}
+
+/**
+ * Flattened rows consumed by the virtualizer.
+ */
+export type DisplayRow =
+  | {
+      type: "region";
+
+      key: string;
+
+      region: string;
+
+      aggregate: Aggregate;
+    }
+  | {
+      type: "territory";
+
+      key: string;
+
+      region: string;
+
+      territory: string;
+
+      aggregate: Aggregate;
+    }
+  | {
+      type: "hcp";
+
+      key: RowKey;
+
+      row: HcpRecord;
+    };
+
+/**
+ * ================================
+ * EDITING
+ * ================================
+ */
 
 export type EditStatus =
   | "editing"
@@ -27,50 +95,77 @@ export type EditStatus =
 
 export interface EditState {
   rowKey: RowKey;
-  originalValue: number | string;
+
+  originalValue: number;
+
   newValue: number;
+
   status: EditStatus;
-  error?: string;
+
   requestId: string;
+
+  error?: string;
 }
 
-export interface FilterState {
-  search: string;
-  region: string;
-}
-
-export interface GroupingState {
-  expandedRegions: string[];
-  expandedTerritories: string[];
-}
+/**
+ * ================================
+ * UNDO / REDO
+ * ================================
+ */
 
 export interface HistoryCommand {
-  type: "edit";
-
   rowKey: RowKey;
 
-  previousValue: number | string;
+  previousValue: number;
 
   nextValue: number;
 }
 
-export interface HistoryState {
-  undoStack: HistoryCommand[];
-  redoStack: HistoryCommand[];
-}
+/**
+ * ================================
+ * COMPLETE REDUX STATE
+ * ================================
+ */
 
 export interface HcpState {
+  /**
+   * Original 50,000 records.
+   */
   rows: HcpRecord[];
 
+  /**
+   * Active edits.
+   */
   edits: Record<string, EditState>;
 
+  /**
+   * Selected HCP row keys.
+   */
   selectedRows: RowKey[];
 
+  /**
+   * Region / Territory expansion.
+   */
   grouping: GroupingState;
 
-  sorting: SortState;
+  /**
+   * Sorting.
+   */
+  sorting: {
+    column: SortColumn | null;
+    direction: SortDirection;
+  };
 
+  /**
+   * Search and filters.
+   */
   filters: FilterState;
 
-  history: HistoryState;
+  /**
+   * Command history.
+   */
+  history: {
+    undoStack: HistoryCommand[];
+    redoStack: HistoryCommand[];
+  };
 }

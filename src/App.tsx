@@ -1,23 +1,19 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import type {
-  RootState,
-  AppDispatch,
-} from "./app/store";
+import type { RootState, AppDispatch } from "./app/store";
 
 import { generateRows } from "./data-generator";
 
 import { setRows } from "./features/hcp/hcpSlice";
 
-import HcpTable from "./features/hcp/components/HcpTable";
+import HcpToolbar from "./features/hcp/components/HcpToolbar";
+import { HcpTable } from "./features/hcp/components/HcpTable";
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
 
-  const rows = useSelector(
-    (state: RootState) => state.hcp.rows
-  );
+  const rows = useSelector((state: RootState) => state.hcp.rows);
 
   useEffect(() => {
     const data = generateRows(42, 50000);
@@ -29,10 +25,9 @@ function App() {
     <div>
       <h1>HCP Data Explorer</h1>
 
-      <p>
-        Total rows: {rows.length}
-      </p>
+      <p>Total rows: {rows.length}</p>
 
+      <HcpToolbar />
       <HcpTable />
     </div>
   );

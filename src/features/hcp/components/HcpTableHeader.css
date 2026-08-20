@@ -1,0 +1,39 @@
+.table-header {
+  display: grid;
+
+  grid-template-columns:
+    260px
+    220px
+    180px
+    140px
+    140px
+    140px
+    120px;
+
+  min-width: 1200px;
+
+  height: 48px;
+
+  align-items: center;
+
+  background: #f2f5f8;
+
+  border-bottom: 1px solid #d9dee5;
+
+  font-weight: 600;
+  color: grey;
+}
+
+.table-header-cell {
+  padding: 0 12px;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.table-header-cell.numeric {
+  text-align: right;
+}

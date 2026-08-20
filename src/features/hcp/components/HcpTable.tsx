@@ -1,17 +1,39 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import type { RootState } from "../../../app/store";
-import HcpTableHeader from "./HcpTableHeader";
+import { selectDisplayRows, selectGrouping } from "../hcpSelectors";
 
-function HcpTable() {
-  const rows = useSelector((state: RootState) => state.hcp.rows);
+import { RegionRow } from "./RegionRow";
+import { TerritoryRow } from "./TerritoryRow";
+import { HcpDataRow } from "./HcpDataRow";
+import { HcpTableHeader } from "./HcpTableHeader";
+import "./HcpTable.css";
+
+export function HcpTable() {
+  /**
+   * These are NOT the original 50,000 rows.
+   *
+   * They are the flattened rows that should currently
+   * be visible according to:
+   *
+   * search
+   * region filter
+   * expanded regions
+   * expanded territories
+   */
+  const displayRows = useSelector(selectDisplayRows);
+
+  const grouping = useSelector(selectGrouping);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Virtualizer works against the flattened
+   * display row list.
+   */
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
+    count: displayRows.length,
 
     getScrollElement: () => parentRef.current,
 
@@ -23,75 +45,80 @@ function HcpTable() {
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   return (
-    <div>
-      <h2>HCP Records</h2>
-
-      <p>Total rows: {rows.length}</p>
+    <div className="hcp-table">
       <HcpTableHeader />
-      <div
-        ref={parentRef}
-        style={{
-          height: "600px",
-          overflow: "auto",
-          border: "1px solid #ddd",
-        }}
-      >
+
+      {/* ========================= */}
+      {/* SCROLL CONTAINER */}
+      {/* ========================= */}
+
+      <div ref={parentRef} className="table-scroll">
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
+
             position: "relative",
+
+            width: "100%",
           }}
         >
           {virtualRows.map((virtualRow) => {
-            const row = rows[virtualRow.index];
+            console.log(displayRows, "displayRows");
+            const displayRow = displayRows[virtualRow.index];
+
+            if (!displayRow) {
+              return null;
+            }
 
             return (
               <div
-                key={virtualRow.index}
+                key={displayRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
                 style={{
                   position: "absolute",
+
                   top: 0,
+
                   left: 0,
+
                   width: "100%",
-                  height: `${virtualRow.size}px`,
+
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "140px 180px 160px 130px 160px 80px 80px 80px",
-                    height: "100%",
-                    alignItems: "center",
-                    borderBottom: "1px solid #eee",
-                  }}
-                >
-                  <div>{row.id}</div>
+                {/* Region */}
+                {displayRow.type === "region" && (
+                  <RegionRow
+                    row={displayRow}
+                    expanded={grouping.expandedRegions.includes(
+                      displayRow.region,
+                    )}
+                  />
+                )}
 
-                  <div>{row.name}</div>
+                {/* Terriotory */}
+                {displayRow.type === "territory" && (
+                  <TerritoryRow
+                    row={displayRow}
+                    expanded={grouping.expandedTerritories.includes(
+                      `${displayRow.region}:${displayRow.territory}`,
+                    )}
+                  />
+                )}
 
-                  <div>{row.specialty ?? "—"}</div>
+                {/* ================= */}
+                {/* HCP */}
+                {/* ================= */}
 
-                  <div>{row.region}</div>
-
-                  <div>{row.territory}</div>
-
-                  <div>{row.calls}</div>
-
-                  <div>{row.trx}</div>
-
-                  <div>{row.nrx}</div>
-                </div>
+                {displayRow.type === "hcp" && (
+                  <HcpDataRow row={displayRow.row} rowKey={displayRow.key} />
+                )}
               </div>
             );
           })}
         </div>
       </div>
-
-      <p>Rows currently in DOM: {virtualRows.length}</p>
     </div>
   );
 }
-
-export default HcpTable;

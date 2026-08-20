@@ -5,22 +5,110 @@ import {
 
 import type { HcpRecord } from "../../data-generator";
 
-import { initialHcpState } from "./hcpInitialState";
-
 import type {
   EditState,
+  FilterState,
+  GroupingState,
   HistoryCommand,
   RowKey,
   SortColumn,
-  HcpState,
+  SortDirection,
 } from "./hcpTypes";
+
+interface HcpState {
+  /**
+   * Original 50,000 records.
+   *
+   * Never replace this array with filtered/grouped data.
+   */
+  rows: HcpRecord[];
+
+  /**
+   * Active edits by stable RowKey.
+   */
+  edits: Record<string, EditState>;
+
+  /**
+   * Selected HCP rows.
+   */
+  selectedRows: RowKey[];
+
+  /**
+   * Region / Territory expansion state.
+   */
+  grouping: GroupingState;
+
+  /**
+   * Current table sorting.
+   */
+  sorting: {
+    column: SortColumn | null;
+    direction: SortDirection;
+  };
+
+  /**
+   * Search and region filter.
+   */
+  filters: FilterState;
+
+  /**
+   * Command-based undo/redo history.
+   */
+  history: {
+    undoStack: HistoryCommand[];
+    redoStack: HistoryCommand[];
+  };
+}
+
+const initialState: HcpState = {
+  rows: [],
+
+  edits: {},
+
+  selectedRows: [],
+
+  /**
+   * Empty means everything is collapsed.
+   *
+   * Initial table:
+   *
+   * ▶ Northeast
+   * ▶ Midwest
+   * ▶ National
+   * ▶ Southeast
+   * ▶ Southwest
+   * ▶ West
+   */
+  grouping: {
+    expandedRegions: [],
+    expandedTerritories: [],
+  },
+
+  sorting: {
+    column: null,
+    direction: "none",
+  },
+
+  filters: {
+    search: "",
+    region: "",
+  },
+
+  history: {
+    undoStack: [],
+    redoStack: [],
+  },
+};
 
 const hcpSlice = createSlice({
   name: "hcp",
 
-  initialState: initialHcpState,
+  initialState,
 
   reducers: {
+    /**
+     * Load the original dataset.
+     */
     setRows(
       state,
       action: PayloadAction<HcpRecord[]>
@@ -28,39 +116,19 @@ const hcpSlice = createSlice({
       state.rows = action.payload;
     },
 
-    updateCalls(
-      state,
-      action: PayloadAction<{
-        rowKey: RowKey;
-        value: number;
-      }>
-    ) {
-      const {
-        rowKey,
-        value,
-      } = action.payload;
-
-      const row = state.rows[rowKey];
-
-      if (!row) {
-        return;
-      }
-
-      row.calls = value;
-    },
-
-    // -------------------------
-    // SEARCH / FILTER
-    // -------------------------
-
+    /**
+     * Search by HCP name or ID.
+     */
     setSearch(
       state,
       action: PayloadAction<string>
     ) {
-      state.filters.search =
-        action.payload;
+      state.filters.search = action.payload;
     },
 
+    /**
+     * Filter by region.
+     */
     setRegionFilter(
       state,
       action: PayloadAction<string>
@@ -69,131 +137,194 @@ const hcpSlice = createSlice({
         action.payload;
     },
 
-    // -------------------------
-    // SORTING
-    // -------------------------
-
+    /**
+     * Three-state sorting:
+     *
+     * none → asc → desc → none
+     */
     setSort(
       state,
       action: PayloadAction<SortColumn>
     ) {
-      const column =
-        action.payload;
+      const column = action.payload;
 
-      // New column
+      /**
+       * Selecting a different column
+       * always starts with ascending.
+       */
       if (
-        state.sorting.column !==
-        column
+        state.sorting.column !== column
       ) {
-        state.sorting.column =
-          column;
-
-        state.sorting.direction =
-          "asc";
+        state.sorting.column = column;
+        state.sorting.direction = "asc";
 
         return;
       }
 
-      // ASC → DESC
+      /**
+       * asc → desc
+       */
       if (
-        state.sorting.direction ===
-        "asc"
+        state.sorting.direction === "asc"
       ) {
-        state.sorting.direction =
-          "desc";
+        state.sorting.direction = "desc";
 
         return;
       }
 
-      // DESC → NONE
+      /**
+       * desc → none
+       */
       if (
-        state.sorting.direction ===
-        "desc"
+        state.sorting.direction === "desc"
       ) {
-        state.sorting.column =
-          null;
-
-        state.sorting.direction =
-          "none";
+        state.sorting.column = null;
+        state.sorting.direction = "none";
 
         return;
       }
 
-      // NONE → ASC
-      state.sorting.direction =
-        "asc";
+      /**
+       * none → asc
+       */
+      state.sorting.direction = "asc";
     },
 
-    // -------------------------
-    // GROUPING
-    // -------------------------
-
+    /**
+     * Expand/collapse a Region.
+     */
     toggleRegion(
       state,
       action: PayloadAction<string>
     ) {
-      const region =
-        action.payload;
+      const region = action.payload;
 
       const index =
         state.grouping.expandedRegions.indexOf(
           region
         );
 
-      if (index >= 0) {
+      if (index !== -1) {
+        /**
+         * Region currently expanded.
+         * Collapse it.
+         */
         state.grouping.expandedRegions.splice(
           index,
           1
         );
       } else {
+        /**
+         * Region currently collapsed.
+         * Expand it.
+         */
         state.grouping.expandedRegions.push(
           region
         );
       }
     },
 
+    /**
+     * Expand/collapse a Territory.
+     *
+     * Territory key contains the region so that
+     * "T1" in different regions cannot collide.
+     *
+     * Example:
+     *
+     * Northeast:Northeast / T3
+     */
     toggleTerritory(
       state,
       action: PayloadAction<string>
     ) {
-      const territory =
+      const territoryKey =
         action.payload;
 
       const index =
         state.grouping.expandedTerritories.indexOf(
-          territory
+          territoryKey
         );
 
-      if (index >= 0) {
+      if (index !== -1) {
         state.grouping.expandedTerritories.splice(
           index,
           1
         );
       } else {
         state.grouping.expandedTerritories.push(
-          territory
+          territoryKey
         );
       }
     },
 
-    // -------------------------
-    // EDITING
-    // -------------------------
+    /**
+     * Select / deselect one HCP.
+     */
+    toggleRowSelection(
+      state,
+      action: PayloadAction<RowKey>
+    ) {
+      const rowKey = action.payload;
 
+      const index =
+        state.selectedRows.indexOf(rowKey);
+
+      if (index !== -1) {
+        state.selectedRows.splice(
+          index,
+          1
+        );
+      } else {
+        state.selectedRows.push(rowKey);
+      }
+    },
+
+    /**
+     * Select multiple HCPs.
+     */
+    selectRows(
+      state,
+      action: PayloadAction<RowKey[]>
+    ) {
+      for (const rowKey of action.payload) {
+        if (
+          !state.selectedRows.includes(
+            rowKey
+          )
+        ) {
+          state.selectedRows.push(rowKey);
+        }
+      }
+    },
+
+    /**
+     * Clear all selection.
+     */
+    clearSelection(state) {
+      state.selectedRows = [];
+    },
+
+    /**
+     * Start an edit.
+     *
+     * Actual validation will be implemented later.
+     */
     startEdit(
       state,
       action: PayloadAction<EditState>
     ) {
-      const edit =
-        action.payload;
-
-      const key =
-        String(edit.rowKey);
+      const key = String(
+        action.payload.rowKey
+      );
 
       state.edits[key] =
-        edit;
+        action.payload;
     },
 
+    /**
+     * Mark an edit as pending.
+     */
     setEditPending(
       state,
       action: PayloadAction<{
@@ -201,128 +332,29 @@ const hcpSlice = createSlice({
         requestId: string;
       }>
     ) {
-      const {
-        rowKey,
-        requestId,
-      } = action.payload;
+      const key = String(
+        action.payload.rowKey
+      );
 
-      const key =
-        String(rowKey);
+      const edit = state.edits[key];
 
-      const edit =
-        state.edits[key];
-
+      /**
+       * Ignore stale async responses.
+       */
       if (
         !edit ||
         edit.requestId !==
-          requestId
+          action.payload.requestId
       ) {
         return;
       }
 
-      edit.status =
-        "pending";
+      edit.status = "pending";
     },
 
-    editRejected(
-      state,
-      action: PayloadAction<{
-        rowKey: RowKey;
-        requestId: string;
-        error: string;
-      }>
-    ) {
-      const {
-        rowKey,
-        requestId,
-        error,
-      } = action.payload;
-
-      const key =
-        String(rowKey);
-
-      const edit =
-        state.edits[key];
-
-      if (
-        !edit ||
-        edit.requestId !==
-          requestId
-      ) {
-        return;
-      }
-
-      edit.status =
-        "rejected";
-
-      edit.error =
-        error;
-    },
-
-    clearEdit(
-      state,
-      action: PayloadAction<RowKey>
-    ) {
-      delete state.edits[
-        String(action.payload)
-      ];
-    },
-
-    // -------------------------
-    // SELECTION
-    // -------------------------
-
-    toggleRowSelection(
-      state,
-      action: PayloadAction<RowKey>
-    ) {
-      const rowKey =
-        action.payload;
-
-      const index =
-        state.selectedRows.indexOf(
-          rowKey
-        );
-
-      if (index >= 0) {
-        state.selectedRows.splice(
-          index,
-          1
-        );
-      } else {
-        state.selectedRows.push(
-          rowKey
-        );
-      }
-    },
-
-    selectRows(
-      state,
-      action: PayloadAction<RowKey[]>
-    ) {
-      for (
-        const rowKey of action.payload
-      ) {
-        if (
-          !state.selectedRows.includes(
-            rowKey
-          )
-        ) {
-          state.selectedRows.push(
-            rowKey
-          );
-        }
-      }
-    },
-
-    clearSelection(state) {
-      state.selectedRows = [];
-    },
-
-    // -------------------------
-    // HISTORY
-    // -------------------------
-
+    /**
+     * Add a command to undo history.
+     */
     pushHistory(
       state,
       action: PayloadAction<HistoryCommand>
@@ -331,12 +363,10 @@ const hcpSlice = createSlice({
         action.payload
       );
 
-      // New command invalidates redo
-      state.history.redoStack = [];
-    },
-
-    clearHistory(state) {
-      state.history.undoStack = [];
+      /**
+       * Any new command invalidates
+       * the redo branch.
+       */
       state.history.redoStack = [];
     },
   },
@@ -344,27 +374,17 @@ const hcpSlice = createSlice({
 
 export const {
   setRows,
-  updateCalls,
-
   setSearch,
   setRegionFilter,
-
   setSort,
-
   toggleRegion,
   toggleTerritory,
-
-  startEdit,
-  setEditPending,
-  editRejected,
-  clearEdit,
-
   toggleRowSelection,
   selectRows,
   clearSelection,
-
+  startEdit,
+  setEditPending,
   pushHistory,
-  clearHistory,
 } = hcpSlice.actions;
 
 export default hcpSlice.reducer;

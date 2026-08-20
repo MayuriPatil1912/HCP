@@ -1,0 +1,135 @@
+.hcp-table {
+  width: 100%;
+  background: #ffffff;
+}
+
+/* Scrollable body */
+.table-scroll {
+  width: 100%;
+  height: 600px;
+  overflow: auto;
+  position: relative;
+}
+
+/*
+ * Every body row must have exactly the
+ * same 7 columns as the header.
+ */
+.table-row {
+  display: grid;
+
+  grid-template-columns:
+    260px
+    220px
+    180px
+    140px
+    140px
+    140px
+    120px;
+
+  min-width: 1200px;
+
+  min-height: 40px;
+
+  align-items: center;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  background: #ffffff;
+}
+
+/* Every cell */
+.table-cell {
+  padding: 0 12px;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+/* Numeric columns */
+.table-cell.numeric {
+  text-align: right;
+}
+
+/* Region */
+.region-row {
+  background: #eef5fb;
+
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.region-row:hover {
+  background: #e5eef7;
+}
+.region-label {
+  grid-column: span 3;
+}
+
+/* Territory */
+.territory-row {
+  background: #f7f9fb;
+
+  cursor: pointer;
+}
+
+.territory-row:hover {
+  background: #eef3f7;
+}
+
+/* HCP */
+.hcp-row {
+  background: #ffffff;
+}
+
+.hcp-row:hover {
+  background: #f8fafc;
+}
+
+/* Expand / collapse button */
+.expand-button {
+  /* width: 24px; */
+
+  padding: 0;
+  font-size: 1rem;
+  font-weight: bold;
+
+  /* margin-right: 4px; */
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  /* font-size: 12px; */
+}
+
+.expand-button:hover {
+  background: #dfe8f0;
+
+  border-radius: 4px;
+}
+
+/* Region and territory first cell */
+.region-cell,
+.territory-name {
+  display: flex;
+
+  align-items: center;
+
+  gap: 4px;
+}
+
+/* HCP count */
+.hcp-count {
+  margin-left: 8px;
+
+  color: black;
+
+  
+}
