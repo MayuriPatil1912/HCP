@@ -21,10 +21,6 @@ const hcpSlice = createSlice({
   initialState: initialHcpState,
 
   reducers: {
-    // -------------------------
-    // DATA
-    // -------------------------
-
     setRows(
       state,
       action: PayloadAction<HcpRecord[]>
