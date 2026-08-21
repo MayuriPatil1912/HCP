@@ -1,17 +1,17 @@
 .hcp-toolbar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin: 12px 4px;
   align-items: center;
 }
 
 .hcp-toolbar-search {
-  width: 180px;
-  height: 30px;
+  width: 18rem;
+  height: 2rem;
   padding: 0 10px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 8px;
+  font-size: 13px;
   outline: none;
   box-sizing: border-box;
 }
@@ -21,25 +21,30 @@
 }
 
 .hcp-toolbar-region {
-  width: 115px;
-  height: 30px;
-  padding: 0 8px;
+  width: 12rem;
+  height: 2rem;
+  padding: 0 10px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
   box-sizing: border-box;
   cursor: pointer;
 }
+.hcp-toolbar-region:focus {
+  border-color: #91afda;
+}
 
 .hcp-toolbar-sort {
-  height: 30px;
+  width: 9rem;
+  height: 2rem;
   padding: 0 10px;
   border: 1px solid #b8dcd2;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #f4fffc;
   color: #159473;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
 }
 

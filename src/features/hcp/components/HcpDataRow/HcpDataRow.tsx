@@ -1,6 +1,7 @@
 import type { HcpRecord } from "../../../../data-generator";
 
 import type { RowKey } from "../../hcpTypes";
+import { getCallsValue } from "../../hcpUtils";
 import { EditableCell } from "../EditableCell/EditableCell";
 
 interface HcpDataRowProps {
@@ -8,11 +9,6 @@ interface HcpDataRowProps {
   rowKey: RowKey;
 }
 
-function getCallsValue(calls: number | string): number {
-  const value = Number(calls);
-
-  return Number.isFinite(value) ? value : 0;
-}
 
 function formatCpi(calls: number | string, trx: number): string {
   const callsValue = getCallsValue(calls);

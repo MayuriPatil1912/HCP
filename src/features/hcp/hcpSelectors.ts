@@ -1,8 +1,8 @@
 import { createSelector } from "@reduxjs/toolkit";
 
 import type { RootState } from "../../app/store";
+import { buildDisplayRows } from "./Utils/BuildDisplayRow";
 
-import { buildDisplayRows } from "./hcpUtils";
 
 //  Get original 50,000 rows
 export const selectRows = (state: RootState) => state.hcp.rows;
@@ -17,7 +17,6 @@ export const selectRegionFilter = (state: RootState) =>
 // Filter rows based on name, Id and Region
 export const selectFilteredRows = createSelector(
   [selectRows, selectSearch, selectRegionFilter],
-
   (rows, search, region) => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -50,30 +49,27 @@ export const selectFilteredRows = createSelector(
 //grouping state
 export const selectGrouping = (state: RootState) => state.hcp.grouping;
 
-/**
- * Final rows displayed by the table.
- *
- * Pipeline:
- *
- * 50,000 rows
- *      ↓
- * search
- *      ↓
- * region filter
- *      ↓
- * Region grouping
- *      ↓
- * Territory grouping
- *      ↓
- * expanded/collapsed
- *      ↓
- * DisplayRow[]
- */
-export const selectDisplayRows = createSelector(
-  [selectFilteredRows, selectGrouping],
+//sortin state
+export const selectSorting = (state: RootState) =>
+  state.hcp.sorting;
 
-  (filteredRows, grouping) => {
-    return buildDisplayRows(filteredRows, grouping);
+export const selectDisplayRows = createSelector(
+  [
+    selectFilteredRows,
+    selectGrouping,
+    selectSorting,
+  ],
+
+  (
+    filteredRows,
+    grouping,
+    sorting,
+  ) => {
+    return buildDisplayRows(
+      filteredRows,
+      grouping,
+      sorting,
+    );
   },
 );
 export const selectEdits = (state: RootState) => state.hcp.edits;
