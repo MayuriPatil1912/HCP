@@ -55,3 +55,6 @@
 .hcp-toolbar-sort:active {
   background: #def5ee;
 }
+.hcp-sort-hint{
+  font-size: 1rem;
+}

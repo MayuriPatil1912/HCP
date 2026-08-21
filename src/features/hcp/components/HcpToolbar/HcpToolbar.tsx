@@ -89,7 +89,7 @@ function HcpToolbar() {
         </button>
       </div>
       <div className="hcp-sort-hint">
-        Click a column header to select sorting, then use the{" "}
+        * Click a column header to select sorting, then use the{" "}
         <strong>Sort</strong> button.
       </div>
     </>

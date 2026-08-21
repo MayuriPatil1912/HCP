@@ -14,8 +14,8 @@ import {
   getHcpSortValue,
 } from "./HcpSorting";
 
-//  * Build the flattened list consumed by the virtualizer.
-//  * Hierarchy: Region -> Territory -> HCP
+// Build the flattened list consumed by the virtualizer.
+// Hierarchy: Region -> Territory -> HCP
 export function buildDisplayRows(
   rows: HcpRecord[],
   grouping: GroupingState,
@@ -25,11 +25,10 @@ export function buildDisplayRows(
   },
 ): DisplayRow[] {
   const displayRows: DisplayRow[] = [];
-
   const isSortingActive =
     sorting.column !== null && sorting.direction !== "none";
 
-  //group by Region
+  // Group by Region
   const regions = new Map<string, HcpRecord[]>();
 
   rows.forEach((row) => {
@@ -42,29 +41,10 @@ export function buildDisplayRows(
     }
   });
 
-  /**
-   * Convert Map to array so that
-   * we can sort regions.
-   */
+  // Convert Map to array so that we can sort regions.
   let regionEntries = Array.from(regions.entries());
 
-  /**
-   * ============================
-   * 2. SORT REGIONS
-   * ============================
-   *
-   * Region sorting is based on
-   * aggregate value.
-   *
-   * Example:
-   *
-   * Calls ASC
-   *
-   * Northeast   165,856
-   * National    166,219
-   * West        263,280
-   * ...
-   */
+  // Sort Regions by aggregate value.
   if (isSortingActive && sorting.column) {
     regionEntries = regionEntries
       .map(([region, regionRows], index) => ({
@@ -75,9 +55,7 @@ export function buildDisplayRows(
       }))
       .sort((a, b) => {
         const aValue = getAggregateSortValue(a.aggregate, sorting.column!);
-
         const bValue = getAggregateSortValue(b.aggregate, sorting.column!);
-
         const comparison = compareSortValues(aValue, bValue);
 
         if (comparison === 0) {
@@ -89,17 +67,10 @@ export function buildDisplayRows(
       .map((item) => [item.region, item.regionRows] as [string, HcpRecord[]]);
   }
 
-  /**
-   * ============================
-   * 3. REGION LOOP
-   * ============================
-   */
+  // Region loop
   for (const [region, regionRows] of regionEntries) {
     const regionAggregate = calculateAggregate(regionRows);
 
-    /**
-     * Add Region row
-     */
     displayRows.push({
       type: "region",
       key: `region:${region}`,
@@ -107,19 +78,12 @@ export function buildDisplayRows(
       aggregate: regionAggregate,
     });
 
-    /**
-     * If collapsed, don't add
-     * territories or HCP rows.
-     */
+    // If collapsed, don't add territories or HCP rows.
     if (!grouping.expandedRegions.includes(region)) {
       continue;
     }
 
-    /**
-     * ============================
-     * 4. GROUP BY TERRITORY
-     * ============================
-     */
+    // Group by Territory
     const territories = new Map<string, HcpRecord[]>();
 
     regionRows.forEach((row) => {
@@ -134,11 +98,7 @@ export function buildDisplayRows(
 
     let territoryEntries = Array.from(territories.entries());
 
-    /**
-     * ============================
-     * 5. SORT TERRITORIES
-     * ============================
-     */
+    // Sort Territories by aggregate value.
     if (isSortingActive && sorting.column) {
       territoryEntries = territoryEntries
         .map(([territory, territoryRows], index) => ({
@@ -149,9 +109,7 @@ export function buildDisplayRows(
         }))
         .sort((a, b) => {
           const aValue = getAggregateSortValue(a.aggregate, sorting.column!);
-
           const bValue = getAggregateSortValue(b.aggregate, sorting.column!);
-
           const comparison = compareSortValues(aValue, bValue);
 
           if (comparison === 0) {
@@ -166,44 +124,25 @@ export function buildDisplayRows(
         );
     }
 
-    /**
-     * ============================
-     * 6. TERRITORY LOOP
-     * ============================
-     */
+    // Territory loop
     for (const [territory, territoryRows] of territoryEntries) {
       const territoryKey = `${region}:${territory}`;
-
       const territoryAggregate = calculateAggregate(territoryRows);
 
-      /**
-       * Add Territory row
-       */
       displayRows.push({
         type: "territory",
-
         key: `territory:${territoryKey}`,
-
         region,
-
         territory,
-
         aggregate: territoryAggregate,
       });
 
-      /**
-       * If Territory is collapsed,
-       * don't add HCP rows.
-       */
+      // If collapsed, don't add HCP rows.
       if (!grouping.expandedTerritories.includes(territoryKey)) {
         continue;
       }
 
-      /**
-       * ============================
-       * 7. SORT HCP ROWS
-       * ============================
-       */
+      // Sort HCP rows.
       let sortedHcpRows = territoryRows;
 
       if (isSortingActive && sorting.column) {
@@ -214,16 +153,10 @@ export function buildDisplayRows(
           }))
           .sort((a, b) => {
             const aValue = getHcpSortValue(a.row, sorting.column!);
-
             const bValue = getHcpSortValue(b.row, sorting.column!);
-
             const comparison = compareSortValues(aValue, bValue);
 
-            /**
-             * Stable sorting:
-             * if values are equal,
-             * preserve original order.
-             */
+            // Preserve original order when values are equal.
             if (comparison === 0) {
               return a.originalIndex - b.originalIndex;
             }
@@ -233,24 +166,13 @@ export function buildDisplayRows(
           .map((item) => item.row);
       }
 
-      /**
-       * ============================
-       * 8. ADD HCP ROWS
-       * ============================
-       */
+      // Add HCP rows.
       for (const row of sortedHcpRows) {
-        /**
-         * IMPORTANT:
-         *
-         * rowKey is based on the
-         * ORIGINAL 50,000-row array,
-         * not the sorted array.
-         */
+        // rowKey remains based on the original 50,000-row array.
         const rowKey = rows.indexOf(row) as RowKey;
 
         displayRows.push({
           type: "hcp",
-
           key: rowKey,
           row,
         });

@@ -1,10 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { selectSortColumn } from "../../hcpSlice";
 
 import type { SortColumn } from "../../hcpTypes";
 
-import type { AppDispatch, RootState } from "../../../../app/store";
+import type { AppDispatch } from "../../../../app/store";
 
 import "./HcpTableHeader.css";
 
@@ -23,13 +23,13 @@ export function HcpTableHeader() {
 
       <button onClick={() => handleSort("Specialty")}>Specialty</button>
 
-      <button onClick={() => handleSort("Calls")}>Calls</button>
+      <button className="numeric" onClick={() => handleSort("Calls")}>Calls</button>
 
-      <button onClick={() => handleSort("TRx")}>TRx</button>
+      <button className="numeric" onClick={() => handleSort("TRx")}>TRx</button>
 
-      <button onClick={() => handleSort("NRx")}>NRx</button>
+      <button className="numeric" onClick={() => handleSort("NRx")}>NRx</button>
 
-      <button onClick={() => handleSort("CPI")}>CPI</button>
+      <button className="numeric" onClick={() => handleSort("CPI")}>CPI</button>
     </div>
   );
 }
