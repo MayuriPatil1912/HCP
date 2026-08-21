@@ -2,13 +2,13 @@ import { useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { selectDisplayRows, selectGrouping } from "../hcpSelectors";
+import { selectDisplayRows, selectGrouping } from "../../hcpSelectors";
 
-import { RegionRow } from "./RegionRow";
-import { TerritoryRow } from "./TerritoryRow";
-import { HcpDataRow } from "./HcpDataRow";
-import { HcpTableHeader } from "./HcpTableHeader";
+import { HcpDataRow } from "../HcpDataRow/HcpDataRow";
+import { HcpTableHeader } from "../HcpTableHeader/HcpTableHeader";
 import "./HcpTable.css";
+import { TerritoryRow } from "../TerriotoryRow/TerritoryRow";
+import { RegionRow } from "../RegionRow/RegionRow";
 
 export function HcpTable() {
   /**
@@ -24,7 +24,7 @@ export function HcpTable() {
    */
   const displayRows = useSelector(selectDisplayRows);
   // console.log(selectDisplayRows,"selectDisplayRows")
-  console.log(displayRows,"displayRows")
+  console.log(displayRows, "displayRows");
 
   const grouping = useSelector(selectGrouping);
 

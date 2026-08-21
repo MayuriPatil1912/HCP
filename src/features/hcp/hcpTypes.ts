@@ -96,9 +96,11 @@ export type EditStatus =
 export interface EditState {
   rowKey: RowKey;
 
+  field: "calls";
+
   originalValue: number;
 
-  newValue: number;
+  value: number;
 
   status: EditStatus;
 

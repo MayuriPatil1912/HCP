@@ -1,0 +1,67 @@
+/* Calls cell when it is being edited */
+.editable-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+/* Input inside editable cell */
+.editable-cell input {
+  width: 58px;
+  height: 26px;
+
+  box-sizing: border-box;
+
+  padding: 3px 8px;
+
+  text-align: right;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  border: 1px solid #7aa7e8;
+  border-radius: 4px;
+
+  background: #eef5ff;
+
+  outline: none;
+}
+
+/* Focus */
+.editable-cell input:focus {
+  border: 1px solid #4d8de8;
+  box-shadow: 0 0 0 1px rgba(77, 141, 232, 0.15);
+}
+
+/* Remove browser number-input arrows */
+.editable-cell input::-webkit-inner-spin-button,
+.editable-cell input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.editable-cell input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* Rejected state */
+.editable-cell.rejected input {
+  border-color: #ef4444;
+  background: #fff1f1;
+}
+
+/* Pending state */
+.editable-cell.pending input {
+  border-color: #f59e0b;
+  background: #fff8e1;
+}
+
+/* Error message */
+.edit-error {
+  margin-left: 5px;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: help;
+}
