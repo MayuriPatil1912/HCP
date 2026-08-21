@@ -8,7 +8,8 @@ import { generateRows } from "./data-generator";
 import { setRows } from "./features/hcp/hcpSlice";
 
 import { HcpTable } from "./features/hcp/components/HcpTable/HcpTable";
-import { HcpToolbar } from "./features/hcp/components/HcpToolbar/HcpToolbar";
+import HcpToolbar from "./features/hcp/components/HcpToolbar/HcpToolbar";
+import { UndoRedo } from "./features/hcp/components/EditableCell/UndoRedo";
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +29,7 @@ function App() {
       <p>Total rows: {rows.length}</p>
 
       <HcpToolbar />
+      <UndoRedo />
       <HcpTable />
     </div>
   );
