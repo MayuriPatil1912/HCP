@@ -300,14 +300,54 @@ const hcpSlice = createSlice({
 
       const edit = state.edits[key];
 
-      // Ignore stale responses
-      if (!edit || edit.requestId !== requestId) {
+      // Ignore if edit no longer exists
+      if (!edit) {
+        return;
+      }
+
+      // Ignore stale response
+      if (edit.requestId !== requestId) {
         return;
       }
 
       edit.status = "rejected";
-
       edit.error = error;
+    },
+
+    editAccepted(
+      state,
+      action: PayloadAction<{
+        rowKey: RowKey;
+        requestId: string;
+        value: number;
+      }>,
+    ) {
+      const { rowKey, requestId, value } = action.payload;
+
+      const key = String(rowKey);
+
+      // Find the current edit
+      const edit = state.edits[key];
+
+      // No edit exists
+      if (!edit) {
+        return;
+      }
+
+      // Ignore stale API response
+      if (edit.requestId !== requestId) {
+        return;
+      }
+
+      // Update actual HCP row
+      const row = state.rows[rowKey];
+
+      if (row) {
+        row.calls = value;
+      }
+
+      // Remove temporary edit state
+      delete state.edits[key];
     },
 
     /**
@@ -340,6 +380,7 @@ export const {
   pushHistory,
   cancelEdit,
   editRejected,
+  editAccepted,
 } = hcpSlice.actions;
 
 export default hcpSlice.reducer;

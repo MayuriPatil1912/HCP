@@ -17,10 +17,7 @@ export type SortColumn =
   | "nrx"
   | "cpi";
 
-export type SortDirection =
-  | "asc"
-  | "desc"
-  | "none";
+export type SortDirection = "asc" | "desc" | "none";
 
 /**
  * Filters
@@ -88,10 +85,7 @@ export type DisplayRow =
  * ================================
  */
 
-export type EditStatus =
-  | "editing"
-  | "pending"
-  | "rejected";
+export type EditStatus = "editing" | "pending" | "rejected";
 
 export interface EditState {
   rowKey: RowKey;
@@ -114,13 +108,14 @@ export interface EditState {
  * UNDO / REDO
  * ================================
  */
-
 export interface HistoryCommand {
+  type: "editCalls";
+
   rowKey: RowKey;
 
   previousValue: number;
 
-  nextValue: number;
+  newValue: number;
 }
 
 /**

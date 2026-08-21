@@ -1,12 +1,11 @@
-/* Calls cell when it is being edited */
 .editable-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 5px;
   height: 100%;
 }
 
-/* Input inside editable cell */
 .editable-cell input {
   width: 58px;
   height: 26px;
@@ -28,13 +27,44 @@
   outline: none;
 }
 
-/* Focus */
+/* Editing */
 .editable-cell input:focus {
-  border: 1px solid #4d8de8;
-  box-shadow: 0 0 0 1px rgba(77, 141, 232, 0.15);
+  border-color: #4d8de8;
 }
 
-/* Remove browser number-input arrows */
+/* ========================= */
+/* PENDING */
+/* ========================= */
+
+.editable-cell.pending input {
+  border-color: #f59e0b;
+  background: #fff7df;
+}
+
+/* ========================= */
+/* REJECTED */
+/* ========================= */
+
+.editable-cell.rejected input {
+  border-color: #dc2626;
+  background: #fff1f1;
+}
+
+.edit-error {
+  color: #dc2626;
+  font-size: 14px;
+  cursor: help;
+}
+/* Saving text */
+
+.edit-pending {
+  font-size: 11px;
+  color: #d97706;
+}
+
+
+/* Remove number arrows */
+
 .editable-cell input::-webkit-inner-spin-button,
 .editable-cell input::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -44,24 +74,4 @@
 .editable-cell input[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
-}
-
-/* Rejected state */
-.editable-cell.rejected input {
-  border-color: #ef4444;
-  background: #fff1f1;
-}
-
-/* Pending state */
-.editable-cell.pending input {
-  border-color: #f59e0b;
-  background: #fff8e1;
-}
-
-/* Error message */
-.edit-error {
-  margin-left: 5px;
-  color: #dc2626;
-  font-size: 12px;
-  cursor: help;
 }

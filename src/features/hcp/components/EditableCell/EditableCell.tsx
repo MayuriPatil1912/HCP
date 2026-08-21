@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import type { RootState } from "../../../../app/store";
-
-import { startEdit, cancelEdit, editRejected } from "../../hcpSlice";
+import {
+  startEdit,
+  setEditPending,
+  editAccepted,
+  editRejected,
+  cancelEdit,
+} from "../../hcpSlice";
 
 import type { RowKey } from "../../hcpTypes";
-
+import { RootState } from "../../../../app/store";
 import "./EditableCell.css";
+import { validateCalls } from "../../../../mock-validator";
 
 interface EditableCellProps {
   rowKey: RowKey;
@@ -21,14 +26,20 @@ export function EditableCell({ rowKey, value }: EditableCellProps) {
     (state: RootState) => state.hcp.edits[String(rowKey)],
   );
 
+  const [inputValue, setInputValue] = useState(String(value));
+
   const numericValue = Number(value);
 
-  const [inputValue, setInputValue] = useState(String(value));
+  // -------------------------
+  // Start editing
+  // -------------------------
 
   const handleStartEdit = () => {
     if (edit) {
       return;
     }
+
+    const requestId = crypto.randomUUID();
 
     dispatch(
       startEdit({
@@ -37,56 +48,78 @@ export function EditableCell({ rowKey, value }: EditableCellProps) {
         originalValue: numericValue,
         value: numericValue,
         status: "editing",
-        requestId: crypto.randomUUID(),
+        requestId,
       }),
     );
 
     setInputValue(String(value));
   };
 
-  const validate = (newValue: number): string | null => {
-    if (!Number.isFinite(newValue)) {
-      return "Calls must be a valid number";
-    }
+  // -------------------------
+  // Save
+  // -------------------------
 
-    if (!Number.isInteger(newValue)) {
-      return "Calls must be an integer";
-    }
-
-    if (newValue < 0) {
-      return "Calls cannot be negative";
-    }
-
-    return null;
-  };
-
-  const handleSave = () => {
-    const newValue = Number(inputValue);
-
-    const error = validate(newValue);
-
-    if (error) {
-      if (edit) {
-        dispatch(
-          editRejected({
-            rowKey,
-            requestId: edit.requestId,
-            error,
-          }),
-        );
-      }
-
+  const handleSave = async () => {
+    if (!edit) {
       return;
     }
 
-    console.log("Value ready to save:", newValue);
+    const newValue = Number(inputValue);
+
+    const requestId = crypto.randomUUID();
+
+    dispatch(
+      startEdit({
+        rowKey,
+        field: "calls",
+        originalValue: edit.originalValue,
+        value: newValue,
+        status: "editing",
+        requestId,
+      }),
+    );
+
+    dispatch(
+      setEditPending({
+        rowKey,
+        requestId,
+      }),
+    );
+
+    try {
+      await validateCalls(newValue);
+
+      dispatch(
+        editAccepted({
+          rowKey,
+          requestId,
+          value: newValue,
+        }),
+      );
+    } catch (error) {
+      dispatch(
+        editRejected({
+          rowKey,
+          requestId,
+          error: String(error),
+        }),
+      );
+    }
   };
+
+  // -------------------------
+  // Cancel
+  // -------------------------
 
   const handleCancel = () => {
     dispatch(cancelEdit(rowKey));
 
     setInputValue(String(value));
   };
+
+  // -------------------------
+  // Normal state
+  // -------------------------
 
   if (!edit) {
     return (
@@ -99,6 +132,10 @@ export function EditableCell({ rowKey, value }: EditableCellProps) {
       </div>
     );
   }
+
+  // -------------------------
+  // Editing / Pending / Rejected
+  // -------------------------
 
   return (
     <div
@@ -114,20 +151,26 @@ export function EditableCell({ rowKey, value }: EditableCellProps) {
         type="number"
         value={inputValue}
         autoFocus
+        disabled={edit.status === "pending"}
         onChange={(event) => {
           setInputValue(event.target.value);
         }}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
+            event.preventDefault();
             handleSave();
           }
 
           if (event.key === "Escape") {
+            event.preventDefault();
             handleCancel();
           }
         }}
-        onBlur={handleSave}
       />
+
+      {edit.status === "pending" && (
+        <span className="edit-pending">Saving...</span>
+      )}
 
       {edit.status === "rejected" && (
         <span className="edit-error" title={edit.error}>
