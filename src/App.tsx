@@ -15,10 +15,10 @@ function App() {
   const dispatch = useDispatch<AppDispatch>();
 
   const rows = useSelector((state: RootState) => state.hcp.rows);
-
+ 
   useEffect(() => {
     const data = generateRows(42, 50000);
-
+   
     dispatch(setRows(data));
   }, [dispatch]);
 

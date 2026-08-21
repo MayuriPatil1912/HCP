@@ -6,96 +6,13 @@ import type {
   EditState,
   FilterState,
   GroupingState,
+  HcpState,
   HistoryCommand,
   RowKey,
   SortColumn,
   SortDirection,
 } from "./hcpTypes";
-
-interface HcpState {
-  /**
-   * Original 50,000 records.
-   *
-   * Never replace this array with filtered/grouped data.
-   */
-  rows: HcpRecord[];
-
-  /**
-   * Active edits by stable RowKey.
-   */
-  edits: Record<string, EditState>;
-
-  /**
-   * Selected HCP rows.
-   */
-  selectedRows: RowKey[];
-
-  /**
-   * Region / Territory expansion state.
-   */
-  grouping: GroupingState;
-
-  /**
-   * Current table sorting.
-   */
-  sorting: {
-    column: SortColumn | null;
-    direction: SortDirection;
-  };
-
-  /**
-   * Search and region filter.
-   */
-  filters: FilterState;
-
-  /**
-   * Command-based undo/redo history.
-   */
-  history: {
-    undoStack: HistoryCommand[];
-    redoStack: HistoryCommand[];
-  };
-}
-
-const initialState: HcpState = {
-  rows: [],
-
-  edits: {},
-
-  selectedRows: [],
-
-  /**
-   * Empty means everything is collapsed.
-   *
-   * Initial table:
-   *
-   * ▶ Northeast
-   * ▶ Midwest
-   * ▶ National
-   * ▶ Southeast
-   * ▶ Southwest
-   * ▶ West
-   */
-  grouping: {
-    expandedRegions: [],
-    expandedTerritories: [],
-  },
-
-  sorting: {
-    column: null,
-    direction: "none",
-  },
-
-  filters: {
-    search: "",
-    region: "",
-  },
-
-  history: {
-    undoStack: [],
-    redoStack: [],
-  },
-};
+import { initialState } from "./hcpInitialState";
 
 const hcpSlice = createSlice({
   name: "hcp",
@@ -103,39 +20,26 @@ const hcpSlice = createSlice({
   initialState,
 
   reducers: {
-    /**
-     * Load the original dataset.
-     */
+    //set Original Rows
     setRows(state, action: PayloadAction<HcpRecord[]>) {
       state.rows = action.payload;
     },
 
-    /**
-     * Search by HCP name or ID.
-     */
+    // search by name, Id and Region
     setSearch(state, action: PayloadAction<string>) {
       state.filters.search = action.payload;
     },
 
-    /**
-     * Filter by region.
-     */
+    //filter by region dropdown
     setRegionFilter(state, action: PayloadAction<string>) {
       state.filters.region = action.payload;
     },
 
-    /**
-     * Three-state sorting:
-     *
-     * none → asc → desc → none
-     */
+    // one → asc → desc → none
     setSort(state, action: PayloadAction<SortColumn>) {
       const column = action.payload;
 
-      /**
-       * Selecting a different column
-       * always starts with ascending.
-       */
+      // start with acending
       if (state.sorting.column !== column) {
         state.sorting.column = column;
         state.sorting.direction = "asc";
@@ -143,18 +47,13 @@ const hcpSlice = createSlice({
         return;
       }
 
-      /**
-       * asc → desc
-       */
+      // asc  -> desc
       if (state.sorting.direction === "asc") {
         state.sorting.direction = "desc";
-
         return;
       }
 
-      /**
-       * desc → none
-       */
+      // desc -> null
       if (state.sorting.direction === "desc") {
         state.sorting.column = null;
         state.sorting.direction = "none";
@@ -162,9 +61,7 @@ const hcpSlice = createSlice({
         return;
       }
 
-      /**
-       * none → asc
-       */
+      //none -> asc
       state.sorting.direction = "asc";
     },
 

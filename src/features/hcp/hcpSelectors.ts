@@ -4,29 +4,17 @@ import type { RootState } from "../../app/store";
 
 import { buildDisplayRows } from "./hcpUtils";
 
-/**
- * Get the original 50,000 rows.
- */
+//  Get original 50,000 rows
 export const selectRows = (state: RootState) => state.hcp.rows;
 
-/**
- * Get search text.
- */
+//Get Search Text
 export const selectSearch = (state: RootState) => state.hcp.filters.search;
 
-/**
- * Get selected region.
- */
+//Get Selected Region
 export const selectRegionFilter = (state: RootState) =>
   state.hcp.filters.region;
 
-/**
- * Filter rows based on:
- *
- * 1. Search by ID
- * 2. Search by name
- * 3. Region
- */
+// Filter rows based on name, Id and Region
 export const selectFilteredRows = createSelector(
   [selectRows, selectSearch, selectRegionFilter],
 
@@ -59,9 +47,7 @@ export const selectFilteredRows = createSelector(
   },
 );
 
-/**
- * Get grouping state.
- */
+//grouping state
 export const selectGrouping = (state: RootState) => state.hcp.grouping;
 
 /**

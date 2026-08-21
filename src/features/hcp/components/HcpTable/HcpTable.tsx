@@ -14,10 +14,8 @@ import { HcpTableFooter } from "../HcpTableFooter/HcpTableFooter";
 export function HcpTable() {
   /**
    * These are NOT the original 50,000 rows.
-   *
    * They are the flattened rows that should currently
    * be visible according to:
-   *
    * search
    * region filter
    * expanded regions

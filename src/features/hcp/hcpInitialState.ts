@@ -1,12 +1,13 @@
-import type { HcpState } from "./hcpTypes";
+import { HcpState } from "./hcpTypes";
 
-export const initialHcpState: HcpState = {
+export const initialState: HcpState = {
   rows: [],
 
   edits: {},
 
   selectedRows: [],
 
+  // Empty means everything is collapsed.
   grouping: {
     expandedRegions: [],
     expandedTerritories: [],

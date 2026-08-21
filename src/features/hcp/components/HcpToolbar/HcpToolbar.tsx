@@ -1,27 +1,33 @@
 import { useDispatch, useSelector } from "react-redux";
 
-
-
 import {
   setSearch,
   setRegionFilter,
   setSort,
 } from "../../hcpSlice";
-import { AppDispatch, RootState } from "../../../../app/store";
+
+import {
+  AppDispatch,
+  RootState,
+} from "../../../../app/store";
+
+import { REGIONS } from "../../hcpConstants";
+
+import "./HcpToolbar.css";
 
 function HcpToolbar() {
   const dispatch = useDispatch<AppDispatch>();
 
   const search = useSelector(
-    (state: RootState) => state.hcp.filters.search
+    (state: RootState) => state.hcp.filters.search,
   );
 
   const region = useSelector(
-    (state: RootState) => state.hcp.filters.region
+    (state: RootState) => state.hcp.filters.region,
   );
 
   const sorting = useSelector(
-    (state: RootState) => state.hcp.sorting
+    (state: RootState) => state.hcp.sorting,
   );
 
   const handleSort = () => {
@@ -47,78 +53,50 @@ function HcpToolbar() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "8px",
-        marginBottom: "8px",
-        alignItems: "center",
-      }}
-    >
+    <div className="hcp-toolbar">
+
       {/* Search */}
       <input
         type="text"
+        className="hcp-toolbar-search"
         value={search}
         placeholder="Search name or ID..."
         onChange={(event) =>
           dispatch(setSearch(event.target.value))
         }
-        style={{
-          width: "180px",
-          height: "30px",
-          padding: "0 10px",
-          border: "1px solid #cbd5e1",
-          borderRadius: "6px",
-          fontSize: "11px",
-          outline: "none",
-        }}
       />
 
       {/* Region */}
       <select
+        className="hcp-toolbar-region"
         value={region}
-        onChange={(event) =>
+        onChange={(event) => {
           dispatch(
-            setRegionFilter(event.target.value)
-          )
-        }
-        style={{
-          width: "115px",
-          height: "30px",
-          padding: "0 8px",
-          border: "1px solid #cbd5e1",
-          borderRadius: "6px",
-          background: "#fff",
-          fontSize: "11px",
+            setRegionFilter(event.target.value),
+          );
         }}
       >
         <option value="">All regions</option>
 
-        <option value="Midwest">Midwest</option>
-        <option value="National">National</option>
-        <option value="Northeast">Northeast</option>
-        <option value="Southeast">Southeast</option>
-        <option value="Southwest">Southwest</option>
-        <option value="West">West</option>
+        {REGIONS.map((regionName) => (
+          <option
+            key={regionName}
+            value={regionName}
+          >
+            {regionName}
+          </option>
+        ))}
       </select>
 
       {/* Sort */}
       <button
         type="button"
+        className="hcp-toolbar-sort"
         onClick={handleSort}
-        style={{
-          height: "30px",
-          padding: "0 10px",
-          border: "1px solid #b8dcd2",
-          borderRadius: "6px",
-          background: "#f4fffc",
-          color: "#159473",
-          fontSize: "11px",
-          cursor: "pointer",
-        }}
       >
         {getSortLabel()}
       </button>
+
     </div>
   );
 }
