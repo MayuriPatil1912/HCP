@@ -2,13 +2,14 @@ import { useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { selectDisplayRows, selectGrouping } from "../../hcpSelectors";
+import { selectDisplayRows, selectGrouping, selectPendingChanges } from "../../hcpSelectors";
 
 import { HcpDataRow } from "../HcpDataRow/HcpDataRow";
 import { HcpTableHeader } from "../HcpTableHeader/HcpTableHeader";
 import "./HcpTable.css";
 import { TerritoryRow } from "../TerriotoryRow/TerritoryRow";
 import { RegionRow } from "../RegionRow/RegionRow";
+import { HcpTableFooter } from "../HcpTableFooter/HcpTableFooter";
 
 export function HcpTable() {
   /**
@@ -27,6 +28,7 @@ export function HcpTable() {
   console.log(displayRows, "displayRows");
 
   const grouping = useSelector(selectGrouping);
+  const pendingChanges = useSelector(selectPendingChanges);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -121,6 +123,12 @@ export function HcpTable() {
           })}
         </div>
       </div>
+      <HcpTableFooter
+        domRowCount={virtualRows.length}
+        totalRowCount={50000}
+        pendingChanges={pendingChanges}
+        lastSortTime={0}
+      />
     </div>
   );
 }

@@ -326,28 +326,76 @@ const hcpSlice = createSlice({
 
       const key = String(rowKey);
 
-      // Find the current edit
       const edit = state.edits[key];
 
-      // No edit exists
       if (!edit) {
         return;
       }
 
-      // Ignore stale API response
+      // Ignore stale response
       if (edit.requestId !== requestId) {
         return;
       }
 
-      // Update actual HCP row
       const row = state.rows[rowKey];
 
-      if (row) {
-        row.calls = value;
+      if (!row) {
+        return;
       }
+
+      // Save old value
+      const previousValue = Number(row.calls);
+
+      // Update actual row
+      row.calls = value;
+
+      // Add to undo history
+      state.history.undoStack.push({
+        type: "editCalls",
+        rowKey,
+        previousValue,
+        newValue: value,
+      });
+
+      // New edit means redo history is no longer valid
+      state.history.redoStack = [];
 
       // Remove temporary edit state
       delete state.edits[key];
+    },
+    undo(state) {
+      const command = state.history.undoStack.pop();
+
+      if (!command) {
+        return;
+      }
+
+      if (command.type === "editCalls") {
+        const row = state.rows[command.rowKey];
+
+        if (row) {
+          row.calls = command.previousValue;
+        }
+      }
+
+      state.history.redoStack.push(command);
+    },
+    redo(state) {
+      const command = state.history.redoStack.pop();
+
+      if (!command) {
+        return;
+      }
+
+      if (command.type === "editCalls") {
+        const row = state.rows[command.rowKey];
+
+        if (row) {
+          row.calls = command.newValue;
+        }
+      }
+
+      state.history.undoStack.push(command);
     },
 
     /**
@@ -381,6 +429,8 @@ export const {
   cancelEdit,
   editRejected,
   editAccepted,
+  undo,
+  redo,
 } = hcpSlice.actions;
 
 export default hcpSlice.reducer;

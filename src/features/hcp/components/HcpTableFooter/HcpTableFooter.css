@@ -1,0 +1,25 @@
+.hcp-table-footer {
+  height: 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 0 12px;
+
+  border: 1px solid #d9e0e7;
+  border-top: none;
+
+  background: #ffffff;
+
+  color: #8a96a3;
+
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.hcp-table-footer strong {
+  font-weight: 500;
+  color: #7d8996;
+}

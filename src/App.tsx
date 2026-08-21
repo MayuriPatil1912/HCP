@@ -7,8 +7,8 @@ import { generateRows } from "./data-generator";
 
 import { setRows } from "./features/hcp/hcpSlice";
 
-import HcpToolbar from "./features/hcp/components/HcpToolbar";
 import { HcpTable } from "./features/hcp/components/HcpTable/HcpTable";
+import { HcpToolbar } from "./features/hcp/components/HcpToolbar/HcpToolbar";
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
