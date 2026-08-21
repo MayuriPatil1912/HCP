@@ -9,13 +9,13 @@ export type RowKey = number;
  * Sorting
  */
 export type SortColumn =
-  | "id"
-  | "name"
-  | "specialty"
-  | "calls"
-  | "trx"
-  | "nrx"
-  | "cpi";
+  | "ID"
+  | "HCP Name"
+  | "Specialty"
+  | "Calls"
+  | "TRx"
+  | "NRx"
+  | "CPI";
 
 export type SortDirection = "asc" | "desc" | "none";
 

@@ -35,34 +35,18 @@ const hcpSlice = createSlice({
       state.filters.region = action.payload;
     },
 
-    // one → asc → desc → none
-    setSort(state, action: PayloadAction<SortColumn>) {
-      const column = action.payload;
+    // column selected for sorting by clicking on column name
+    selectSortColumn(state, action: PayloadAction<SortColumn>) {
+      state.sorting.column = action.payload;
+    },
 
-      // start with acending
-      if (state.sorting.column !== column) {
-        state.sorting.column = column;
-        state.sorting.direction = "asc";
+    // select sorting direction by clicking on sort button
+    applySort(state, action: PayloadAction<SortDirection>) {
+      state.sorting.direction = action.payload;
 
-        return;
-      }
-
-      // asc  -> desc
-      if (state.sorting.direction === "asc") {
-        state.sorting.direction = "desc";
-        return;
-      }
-
-      // desc -> null
-      if (state.sorting.direction === "desc") {
+      if (action.payload === "none") {
         state.sorting.column = null;
-        state.sorting.direction = "none";
-
-        return;
       }
-
-      //none -> asc
-      state.sorting.direction = "asc";
     },
 
     /**
@@ -314,7 +298,8 @@ export const {
   setRows,
   setSearch,
   setRegionFilter,
-  setSort,
+  applySort,
+  selectSortColumn,
   toggleRegion,
   toggleTerritory,
   toggleRowSelection,
@@ -328,6 +313,7 @@ export const {
   editAccepted,
   undo,
   redo,
+  
 } = hcpSlice.actions;
 
 export default hcpSlice.reducer;

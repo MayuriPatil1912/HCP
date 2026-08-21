@@ -1,34 +1,35 @@
-import "./HcpTableHeader.css"
+import { useDispatch, useSelector } from "react-redux";
+
+import { selectSortColumn } from "../../hcpSlice";
+
+import type { SortColumn } from "../../hcpTypes";
+
+import type { AppDispatch, RootState } from "../../../../app/store";
+
+import "./HcpTableHeader.css";
+
 export function HcpTableHeader() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleSort = (column: SortColumn) => {
+    dispatch(selectSortColumn(column));
+  };
+
   return (
     <div className="table-header">
-      <div className="table-header-cell">
-        ID
-      </div>
+      <button onClick={() => handleSort("ID")}>ID</button>
 
-      <div className="table-header-cell">
-        HCP NAME
-      </div>
+      <button onClick={() => handleSort("HCP Name")}>HCP Name</button>
 
-      <div className="table-header-cell">
-        SPECIALITY
-      </div>
+      <button onClick={() => handleSort("Specialty")}>Specialty</button>
 
-      <div className="table-header-cell numeric">
-        CALLS
-      </div>
+      <button onClick={() => handleSort("Calls")}>Calls</button>
 
-      <div className="table-header-cell numeric">
-        TRX
-      </div>
+      <button onClick={() => handleSort("TRx")}>TRx</button>
 
-      <div className="table-header-cell numeric">
-        NRX
-      </div>
+      <button onClick={() => handleSort("NRx")}>NRx</button>
 
-      <div className="table-header-cell numeric">
-        CPI
-      </div>
+      <button onClick={() => handleSort("CPI")}>CPI</button>
     </div>
   );
 }
