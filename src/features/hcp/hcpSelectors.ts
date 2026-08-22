@@ -3,7 +3,6 @@ import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "../../app/store";
 import { buildDisplayRows } from "./Utils/BuildDisplayRow";
 
-
 //  Get original 50,000 rows
 export const selectRows = (state: RootState) => state.hcp.rows;
 
@@ -21,16 +20,12 @@ export const selectFilteredRows = createSelector(
     const normalizedSearch = search.trim().toLowerCase();
 
     return rows.filter((row) => {
-      /**
-       * Region filter
-       */
+      // Region Filter dropdown
       if (region && row.region !== region) {
         return false;
       }
 
-      /**
-       * Search filter
-       */
+      //search filter
       if (normalizedSearch) {
         const matchesId = row.id.toLowerCase().includes(normalizedSearch);
 
@@ -50,26 +45,13 @@ export const selectFilteredRows = createSelector(
 export const selectGrouping = (state: RootState) => state.hcp.grouping;
 
 //sortin state
-export const selectSorting = (state: RootState) =>
-  state.hcp.sorting;
+export const selectSorting = (state: RootState) => state.hcp.sorting;
 
 export const selectDisplayRows = createSelector(
-  [
-    selectFilteredRows,
-    selectGrouping,
-    selectSorting,
-  ],
+  [selectFilteredRows, selectGrouping, selectSorting],
 
-  (
-    filteredRows,
-    grouping,
-    sorting,
-  ) => {
-    return buildDisplayRows(
-      filteredRows,
-      grouping,
-      sorting,
-    );
+  (filteredRows, grouping, sorting) => {
+    return buildDisplayRows(filteredRows, grouping, sorting);
   },
 );
 export const selectEdits = (state: RootState) => state.hcp.edits;

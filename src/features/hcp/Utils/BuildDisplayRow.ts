@@ -31,9 +31,10 @@ export function buildDisplayRows(
   // Group by Region
   const regions = new Map<string, HcpRecord[]>();
 
+  //This will create Map of 6 Regions, region as key and each region(key) points to the array of rows which have that region
+  //region = Map(6) {'Southeast' => array(48),....}
   rows.forEach((row) => {
-    const existing = regions.get(row.region);
-
+    const existing = regions.get(row.region); // return the value(Array of rows)
     if (existing) {
       existing.push(row);
     } else {
@@ -42,6 +43,7 @@ export function buildDisplayRows(
   });
 
   // Convert Map to array so that we can sort regions.
+  //[['SouthWest',[Array(8294)]], ...]
   let regionEntries = Array.from(regions.entries());
 
   // Sort Regions by aggregate value.
@@ -71,6 +73,7 @@ export function buildDisplayRows(
   for (const [region, regionRows] of regionEntries) {
     const regionAggregate = calculateAggregate(regionRows);
 
+    //For the first region row
     displayRows.push({
       type: "region",
       key: `region:${region}`,
@@ -78,12 +81,14 @@ export function buildDisplayRows(
       aggregate: regionAggregate,
     });
 
-    // If collapsed, don't add territories or HCP rows.
+    // If collapsed, don't add territories or HCP rows,go and add second region row
     if (!grouping.expandedRegions.includes(region)) {
       continue;
     }
 
     // Group by Territory
+    //We will create Map for each Territory
+    //{"Southwest / T3" => Array(1063),....}
     const territories = new Map<string, HcpRecord[]>();
 
     regionRows.forEach((row) => {
@@ -95,7 +100,8 @@ export function buildDisplayRows(
         territories.set(row.territory, [row]);
       }
     });
-
+    // Covert this Map into Array like below
+    // [['Southwest / T3', Array(1063)],....]
     let territoryEntries = Array.from(territories.entries());
 
     // Sort Territories by aggregate value.
@@ -182,3 +188,35 @@ export function buildDisplayRows(
 
   return displayRows;
 }
+// Create Map of Regions like below
+//  {'Southeast' => array(48),....}
+
+// Convert Map to Array for Iterration like below
+// [['SouthWest',[Array(8294)]], ...]
+
+// sort the array by given column
+
+// In the for loop
+// For First Region Add row
+// Check in expanded region array ,if the that region is expanded continue the loop and check the next region
+
+// If region is expanded in expanded region array
+
+// Then create Map for of territory like below
+// {"Southwest / T3" => Array(1063), ...}
+
+//  Covert this Map into Array like below
+//  [['Southwest / T3', Array(1063)],....]
+
+// sort the array by given column
+
+// In the for loop
+// For First Terriotory Add row
+// Check in expanded territory array ,if the that teretory is expanded continue,the loop and check the next teritory
+
+// If teritory is expanded in teritory array
+
+// sort the array by given column name
+
+// In the for loop
+// first HCP add the row
